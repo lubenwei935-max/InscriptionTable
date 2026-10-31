@@ -1,0 +1,82 @@
+// Forge 1.7.10 工程（ForgeGradle 1.2 —— 必须使用 Gradle 2.x + JDK 8，详见 README）
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { name = "forge"; url = "https://maven.minecraftforge.net/" }
+        maven { name = "sonatype"; url = "https://oss.sonatype.org/content/repositories/snapshots/" }
+    }
+    dependencies {
+        classpath "net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT"
+    }
+}
+
+apply plugin: "forge"
+
+version = "1.2.2"
+group = "com.example.inscriptiontable"
+archivesBaseName = "InscriptionTable-1.7.10"
+
+minecraft {
+    version = "1.7.10-10.13.4.1614-1.7.10"
+    runDir = "eclipse"
+}
+
+// 不依赖任何第三方 UI 库：界面全部用原版 GuiScreen / 原版网络包实现。
+// 只有 Minecraft + Forge 两个依赖，由 ForgeGradle 自动提供。
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
+// 源码里有中文注释/文案，必须按 UTF-8 编译，否则在中文 Windows 上直接用 GBK
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+// ---------------------------------------------------------------------------
+// 1.7.10 兼容补丁
+// ForgeGradle 1.2 里写死了 s3.amazonaws.com/Minecraft.Download 的下载地址，该地址早已失效。
+// 这里把它们换成 Mojang 现在的 CDN 地址（哈希固定，指向的仍是同一份 1.7.10 文件）。
+// ---------------------------------------------------------------------------
+def LEGACY_URLS = [
+        "http://s3.amazonaws.com/Minecraft.Download/versions/1.7.10/1.7.10.jar"                :
+                "https://launcher.mojang.com/v1/objects/e80d9b3bf5085002218d4be59e668bac718abbc6/client.jar",
+        "http://s3.amazonaws.com/Minecraft.Download/versions/1.7.10/minecraft_server.1.7.10.jar":
+                "https://launcher.mojang.com/v1/objects/952438ac4e01b4d115c5fc38f891710c4941df29/server.jar",
+        "http://s3.amazonaws.com/Minecraft.Download/versions/1.7.10/1.7.10.json"               :
+                "https://piston-meta.mojang.com/v1/packages/ed5d8789ed29872ea2ef1c348302b0c55e3f3468/1.7.10.json",
+        "https://s3.amazonaws.com/Minecraft.Download/indexes/1.7.10.json"                      :
+                "https://launchermeta.mojang.com/v1/packages/1863782e33ce7b584fc45b037325a1964e095d3e/1.7.10.json"
+]
+
+afterEvaluate { proj ->
+    proj.tasks.each { t ->
+        try {
+            if (t.class.name.contains("EtagDownloadTask")) {
+                String old = t.url == null ? null : t.url.toString()
+                if (old != null && LEGACY_URLS.containsKey(old)) {
+                    t.setUrl(LEGACY_URLS[old])
+                }
+            } else if (t.class.name.contains("DownloadTask")) {
+                String old = t.url
+                if (old != null && LEGACY_URLS.containsKey(old)) {
+                    t.setUrl(new net.minecraftforge.gradle.delayed.DelayedString(proj, LEGACY_URLS[old]))
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+}
+
+// 说明：这里刻意不对 resources 做 expand/filter。
+// mcmod.info 与 lang 里都有中文，Gradle 2.x 的模板替换会用平台默认编码读取源文件，
+// 在中文 Windows 上会把 UTF-8 文本破坏成乱码；纯拷贝则逐字节保留。
+// 版本号请同时改 InscriptionTableMod.VERSION 与 mcmod.info。
+
+jar {
+    manifest {
+        attributes(
+                "Implementation-Title": "InscriptionTable",
+                "Implementation-Version": project.version
+        )
+    }
+}

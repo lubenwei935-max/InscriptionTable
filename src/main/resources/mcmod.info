@@ -1,0 +1,18 @@
+[
+{
+  "modid": "inscriptiontable",
+  "name": "Inscription Table",
+  "description": "铭刻台：为任意物品写入自定义铭文，支持 RGB 颜色代码与所见即所得编辑，内容保存在物品 NBT 中。",
+  "version": "1.2.2",
+  "mcversion": "1.7.10",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["your name"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "parent": "",
+  "useDependencyInformation": false,
+  "requiredMods": []
+}
+]

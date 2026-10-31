@@ -1,0 +1,21 @@
+# Gradle / ForgeGradle
+.gradle/
+build/
+out/
+eclipse/
+run/
+logs/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+
+# 系统
+Thumbs.db
+.DS_Store
